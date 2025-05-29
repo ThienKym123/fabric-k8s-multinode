@@ -53,6 +53,9 @@ function check_prerequisites() {
     fi
   fi
 
+  sudo swapoff -a
+  sudo sed -i '/ swap / s/^/#/' /etc/fstab
+
   pop_fn "Prerequisites verified"
 }
 
@@ -64,9 +67,32 @@ function install_registry_cert() {
     exit 1
   fi
 
-  sudo mkdir -p $CERT_DIR
-  sudo cp $REGISTRY_CERT $CERT_DIR/ca.crt
-  sudo chmod 644 $CERT_DIR/ca.crt
+  # Install for Docker
+  sudo mkdir -p "$CERT_DIR"
+  sudo cp "$REGISTRY_CERT" "$CERT_DIR/ca.crt"
+  sudo chmod 644 "$CERT_DIR/ca.crt"
+
+  # Install for system-wide trust (Kubelet)
+  sudo mkdir -p /usr/local/share/ca-certificates/registry
+  sudo cp "$REGISTRY_CERT" /usr/local/share/ca-certificates/registry/registry.crt
+  sudo update-ca-certificates
+  if [ $? -ne 0 ]; then
+    log "ERROR: Failed to update CA certificates."
+    exit 1
+  fi
+
+  if ! grep -Fx "registry/registry.crt" /etc/ca-certificates.conf >/dev/null; then
+    echo "registry/registry.crt" | sudo tee -a /etc/ca-certificates.conf
+  fi
+
+  sudo update-ca-certificates
+  if [ $? -ne 0 ]; then
+    log "ERROR: Failed to update CA certificates."
+    exit 1
+  fi
+  
+
+  # Restart services
   sudo systemctl restart $CONTAINER_CLI
   sleep 2
   sudo systemctl is-active $CONTAINER_CLI > /dev/null

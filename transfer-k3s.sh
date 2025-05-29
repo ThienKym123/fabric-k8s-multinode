@@ -10,7 +10,7 @@ BASE_PATH="/home/kym/Blockchain/fabric-samples/test-network-k8s"
 WORKER_NODES=(
   "192.168.208.147:ad1:1:/home/ad1/fabric-samples/test-network-k8s"
   "192.168.208.145:ad2:2:/home/ad2/fabric-samples/test-network-k8s"
-#   "192.168.208.146:ad3:3:/home/ad3/fabric-samples/test-network-k8s"
+  "192.168.208.146:ad3:3:/home/ad3/fabric-samples/test-network-k8s"
 )  # Format: IP:USER:PASS:DEST_DIR
 FILES=("join-cluster.sh" "registry.crt")
 
