@@ -313,13 +313,16 @@ function launch_chaincode_service() {
 }
 
 function launch_chaincode() {
-  local org=org1
   local cc_name=$1
   local cc_id=$2
   local cc_image=$3
 
-  launch_chaincode_service ${org} peer1 ${cc_name} ${cc_id} ${cc_image}
-  launch_chaincode_service ${org} peer2 ${cc_name} ${cc_id} ${cc_image}
+  # Launch chaincode services for org1
+  launch_chaincode_service org1 peer1 ${cc_name} ${cc_id} ${cc_image}
+  launch_chaincode_service org1 peer2 ${cc_name} ${cc_id} ${cc_image}
+  # Launch chaincode services for org2
+  launch_chaincode_service org2 peer1 ${cc_name} ${cc_id} ${cc_image}
+  launch_chaincode_service org2 peer2 ${cc_name} ${cc_id} ${cc_image}
 }
 
 function install_chaincode_for() {
@@ -337,20 +340,33 @@ function install_chaincode_for() {
 
 # Package and install the chaincode, but do not activate.
 function install_chaincode() {
-  local org=org1
   local cc_package=$1
 
-  install_chaincode_for ${org} peer1 ${cc_package}
-  install_chaincode_for ${org} peer2 ${cc_package}
+  # Install chaincode for org1
+  install_chaincode_for org1 peer1 ${cc_package}
+  install_chaincode_for org1 peer2 ${cc_package}
+  # Install chaincode for org2
+  install_chaincode_for org2 peer1 ${cc_package}
+  install_chaincode_for org2 peer2 ${cc_package}
 }
 
 # approve the chaincode package for an org and assign a name
 function approve_chaincode() {
-  local org=org1
-  local peer=peer1
   local cc_name=$1
   local cc_id=$2
-  push_fn "Approving chaincode ${cc_name} with ID ${cc_id}"
+
+  # Approve chaincode for org1
+  approve_chaincode_for org1 peer1 ${cc_name} ${cc_id}
+  # Approve chaincode for org2
+  approve_chaincode_for org2 peer1 ${cc_name} ${cc_id}
+}
+
+function approve_chaincode_for() {
+  local org=$1
+  local peer=$2
+  local cc_name=$3
+  local cc_id=$4
+  push_fn "Approving chaincode ${cc_name} with ID ${cc_id} for ${org}"
 
   export_peer_context $org $peer
 
@@ -371,10 +387,17 @@ function approve_chaincode() {
 
 # commit the named chaincode for an org
 function commit_chaincode() {
-  local org=org1
-  local peer=peer1
   local cc_name=$1
-  push_fn "Committing chaincode ${cc_name}"
+
+  # Commit chaincode from org1 (assuming both orgs have approved)
+  commit_chaincode_for org1 peer1 ${cc_name}
+}
+
+function commit_chaincode_for() {
+  local org=$1
+  local peer=$2
+  local cc_name=$3
+  push_fn "Committing chaincode ${cc_name} from ${org}"
 
   export_peer_context $org $peer
 
@@ -391,6 +414,7 @@ function commit_chaincode() {
 
   pop_fn
 }
+
 
 function set_chaincode_id() {
   local cc_package=$1
