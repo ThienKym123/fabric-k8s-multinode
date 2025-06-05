@@ -189,9 +189,9 @@ function invoke_chaincode() {
     -n              $cc_name \
     -C              $CHANNEL_NAME \
     -c              $@ \
-    --orderer       org0-orderer1.${DOMAIN}:${NGINX_HTTPS_PORT} \
+    --orderer       org0-orderer2.${DOMAIN}:${NGINX_HTTPS_PORT} \
     --connTimeout   ${ORDERER_TIMEOUT} \
-    --tls --cafile  ${TEMP_DIR}/channel-msp/ordererOrganizations/org0/orderers/org0-orderer1/tls/signcerts/tls-cert.pem \
+    --tls --cafile  ${TEMP_DIR}/channel-msp/ordererOrganizations/org0/orderers/org0-orderer2/tls/signcerts/tls-cert.pem \
     ${INVOKE_EXTRA_ARGS}
 
   sleep 2
@@ -297,14 +297,20 @@ function launch_chaincode_service() {
   local cc_image=$5
   push_fn "Launching chaincode container \"${cc_image}\""
 
-  # The chaincode endpoint needs to have the generated chaincode ID available in the environment.
-  # This could be from a config map, a secret, or by directly editing the deployment spec.  Here we'll keep
-  # things simple by using sed to substitute script variables into a yaml template.
+  # Gán node dựa trên peer
+  if [ "$peer" == "peer1" ]; then
+    NODE_NAME="admin2"
+  else
+    NODE_NAME="admin3"
+  fi
+
+  # Thay thế biến trong YAML và áp dụng
   cat kube/${org}/${org}-cc-template.yaml \
     | sed 's,{{CHAINCODE_NAME}},'${cc_name}',g' \
     | sed 's,{{CHAINCODE_ID}},'${cc_id}',g' \
     | sed 's,{{CHAINCODE_IMAGE}},'${cc_image}',g' \
     | sed 's,{{PEER_NAME}},'${peer}',g' \
+    | sed 's,{{NODE_NAME}},'${NODE_NAME}',g' \
     | exec kubectl -n $ORG1_NS apply -f -
 
   kubectl -n $ORG1_NS rollout status deploy/${org}${peer}-ccaas-${cc_name}

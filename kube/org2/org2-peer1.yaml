@@ -75,6 +75,20 @@ spec:
         app: org2-peer1
         org: org2
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - admin2
+      tolerations:
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 30
       containers:
         - name: main
           image: ${FABRIC_PEER_IMAGE}

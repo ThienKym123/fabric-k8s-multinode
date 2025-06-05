@@ -39,6 +39,20 @@ spec:
       labels:
         app: org2-ca
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - admin3
+      tolerations:
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 30
       containers:
         - name: main
           image: ${FABRIC_CONTAINER_REGISTRY}/fabric-ca:${FABRIC_CA_VERSION}

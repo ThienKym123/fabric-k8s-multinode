@@ -190,6 +190,19 @@ function scrub_org_volumes() {
   pop_fn
 }
 
+function cleanup_storage_volumes() {
+  push_fn "Cleaning up NFS volumes and provisioner"
+
+  kubectl -n $ORG0_NS delete -f kube/org0/fabric-org0-pvc.yaml || true
+  kubectl -n $ORG1_NS delete -f kube/org1/fabric-org1-pvc.yaml || true
+  kubectl -n $ORG2_NS delete -f kube/org2/fabric-org2-pvc.yaml || true
+
+  helm uninstall nfs-subdir-external-provisioner -n nfs-provisioner || true
+  kubectl delete namespace nfs-provisioner || true
+
+  pop_fn
+}
+
 # Tear down the Fabric network
 function network_down() {
   set +e
@@ -203,6 +216,8 @@ function network_down() {
     scrub_org_volumes
     delete_namespace
   done
+  
+  cleanup_storage_volumes
   set -e
 
   rm -rf $PWD/build

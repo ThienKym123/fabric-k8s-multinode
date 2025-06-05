@@ -41,17 +41,22 @@ export TEST_NETWORK_CLUSTER_RUNTIME=k3s
 
 Launch the network, create a channel, and deploy the [basic-asset-transfer](../asset-transfer-basic) smart contract: 
 ```shell
-./network up
+./start.sh up
 
-./network channel create
+./start.sh channel create
 
-./network chaincode deploy asset-transfer-basic ../asset-transfer-basic/chaincode-java
+./start.sh chaincode deploy asset-transfer-basic ../asset-transfer-basic/chaincode-go/
 ```
 
 Invoke and query chaincode:
 ```shell
-./network chaincode invoke asset-transfer-basic '{"Args":["InitLedger"]}'
-./network chaincode query  asset-transfer-basic '{"Args":["ReadAsset","asset1"]}'
+./start.sh chaincode invoke asset-transfer-basic '{"Args":["InitLedger"]}'
+./start.sh chaincode query asset-transfer-basic '{"Args":["ReadAsset","asset1"]}'
+./start.sh chaincode query asset-transfer-basic '{"Args":["GetAllAssets"]}'
+./start.sh chaincode invoke asset-transfer-basic '{"Args":["CreateAsset","asset8","green","200","user1","1000"]}'
+./start.sh chaincode query asset-transfer-basic '{"Args":["ReadAsset","asset8"]}'
+./start.sh chaincode invoke asset-transfer-basic '{"Args":["UpdateAsset","asset8","blue","150","user1","1200"]}'
+
 ```
 
 Access the blockchain with a [REST API](https://github.com/hyperledger/fabric-samples/tree/main/asset-transfer-basic/rest-api-typescript): 

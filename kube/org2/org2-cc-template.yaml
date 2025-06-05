@@ -31,6 +31,15 @@ spec:
               value: {{CHAINCODE_ID}}
           ports:
             - containerPort: 9999
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{NODE_NAME}}  # Thêm biến để chỉ định node
 
 ---
 apiVersion: v1

@@ -265,7 +265,7 @@ function cluster_init() {
     push_docker_images
   fi
 
-  create_local_path
+  # create_local_path
 
   pop_fn
 }
