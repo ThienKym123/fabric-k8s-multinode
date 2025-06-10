@@ -130,6 +130,26 @@ function cluster_clean() {
   pop_fn
 }
 
+function restart_node() {
+  push_fn "Restarting node services"
+
+  # Ensure kubelet and container runtime are running
+  sudo systemctl restart $CONTAINER_CLI
+  sudo systemctl enable kubelet --now
+  sudo systemctl restart kubelet
+
+  sleep 3
+
+  if ! systemctl is-active --quiet kubelet; then
+    log "ERROR: kubelet is not running after restart."
+    exit 1
+  fi
+
+  log "Node services restarted successfully."
+  pop_fn
+}
+
+
 function cluster_command_group() {
   if [ "$#" -eq 0 ]; then
     COMMAND="init"
@@ -147,8 +167,12 @@ function cluster_command_group() {
     check_prerequisites
     cluster_clean
     log "🏁 Worker node cleaned."
+  elif [ "${COMMAND}" == "restart" ]; then
+    check_prerequisites
+    restart_node
+    log "🏁 Node restarted successfully."  
   else
-    log "Usage: $0 [init|clean]"
+    log "Usage: $0 [init|clean|restart]"
     exit 1
   fi
 }

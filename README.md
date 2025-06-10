@@ -38,6 +38,11 @@ export TEST_NETWORK_CLUSTER_RUNTIME=k3s
 
 ./network cluster init
 ```
+or for kubeadm 4 node (1 control plane + 3 worker node)
+```shell
+
+./start.sh cluster 
+```
 
 Launch the network, create a channel, and deploy the [basic-asset-transfer](../asset-transfer-basic) smart contract: 
 ```shell
@@ -57,6 +62,13 @@ Invoke and query chaincode:
 ./start.sh chaincode query asset-transfer-basic '{"Args":["ReadAsset","asset8"]}'
 ./start.sh chaincode invoke asset-transfer-basic '{"Args":["UpdateAsset","asset8","blue","150","user1","1200"]}'
 
+```
+
+Shut down the kubeadm multi node network: 
+
+```shell
+./start down 
+./start clean
 ```
 
 Access the blockchain with a [REST API](https://github.com/hyperledger/fabric-samples/tree/main/asset-transfer-basic/rest-api-typescript): 

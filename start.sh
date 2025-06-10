@@ -46,8 +46,8 @@ source k8s-setup/fabric_CAs.sh
 source k8s-setup/test_network.sh
 source k8s-setup/channel.sh
 source k8s-setup/chaincode.sh
-# source k8s-setup/rest_sample.sh
-# source k8s-setup/application_connection.sh
+source k8s-setup/rest_sample.sh
+source k8s-setup/application_connection.sh
 
 # Initialize logging
 logging_init
