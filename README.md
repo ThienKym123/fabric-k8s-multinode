@@ -61,7 +61,7 @@ Launch backend:
 ```
 
 Test API:
-https://.postman.co/workspace/My-Workspace~a44268f6-ecbd-4424-8a5f-2a9ad6206e40/collection/37567808-5821b3ec-a62e-4953-8612-74db15889cfc?action=share&creator=37567808
+https://www.postman.com/research-administrator-81537314/test-api-backend-fabric-k8s/collection/gn6bn16/asset-basic-backend-k8s?action=share&creator=0
 
 Clean backend:
 ```shell
