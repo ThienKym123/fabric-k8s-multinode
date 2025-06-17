@@ -1,0 +1,18 @@
+{
+    "name": "test-network-backend",
+    "version": "1.0.0",
+    "description": "Backend for Hyperledger Fabric Test Network",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@grpc/grpc-js": "^1.12.2",
+        "@hyperledger/fabric-gateway": "^1.7.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.5.0",
+        "express": "^5.1.0",
+        "fabric-ca-client": "^2.2.20",
+        "fabric-network": "^2.2.20"
+    }
+}

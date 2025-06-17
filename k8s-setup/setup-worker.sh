@@ -127,6 +127,10 @@ function cluster_clean() {
   sudo kubeadm reset -f >/dev/null
   sudo rm -rf /etc/kubernetes /var/lib/kubelet $CERT_DIR
 
+  sudo ip link delete cni0 || true
+  sudo ip link delete flannel.1 || true
+  sudo rm -rf /var/lib/cni/ /run/flannel/ /etc/cni/net.d/*
+  
   pop_fn
 }
 

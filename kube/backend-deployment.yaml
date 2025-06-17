@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: ${KUBE_NAMESPACE}
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: ${CONTROL_PLANE_IP}:${LOCAL_REGISTRY_PORT}/test-network-backend:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: app-fabric-org1-v1-map
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+          volumeMounts:
+            - name: wallet
+              mountPath: /fabric/application/wallet
+            - name: fabric-ccp
+              mountPath: /fabric/application/gateways
+            - name: tlscerts
+              mountPath: /fabric/tlscacerts
+      volumes:
+        - name: wallet
+          persistentVolumeClaim:
+            claimName: fabric-wallet
+        - name: fabric-ccp
+          configMap:
+            name: app-fabric-ccp-v1-map
+        - name: tlscerts
+          configMap:
+            name: app-fabric-tls-v1-map

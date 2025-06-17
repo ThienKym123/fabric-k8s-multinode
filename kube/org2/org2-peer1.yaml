@@ -165,6 +165,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: 60s
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
   labels:
     app: org2-peer1
   name: org2-peer1

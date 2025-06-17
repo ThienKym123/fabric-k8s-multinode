@@ -48,6 +48,7 @@ source k8s-setup/channel.sh
 source k8s-setup/chaincode.sh
 source k8s-setup/rest_sample.sh
 source k8s-setup/application_connection.sh
+source backend.sh
 
 # Initialize logging
 logging_init
@@ -105,6 +106,16 @@ case "${MODE}" in
     log "🏁 - Application connection information ready"
     pop_fn 0
     ;;
+  backend)
+    push_fn "Deploying backend"
+    deploy_backend
+    pop_fn 0
+    ;;
+  backend-clean)
+    push_fn "Cleaning backend"
+    clean_backend
+    pop_fn 0
+    ;;  
   cluster)
     cluster_init
     ;;

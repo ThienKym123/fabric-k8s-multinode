@@ -77,6 +77,7 @@ function deploy_chaincode() {
   local cc_folder=$(absolute_path $2)
   local temp_folder=$(mktemp -d)
   local cc_package=${temp_folder}/${cc_name}.tgz
+  local cc_endorsement_policy=${3:-"OR('Org1MSP.peer','Org2MSP.peer')"} 
 
   prepare_chaincode_image ${cc_folder} ${cc_name}
   package_chaincode       ${cc_name} ${cc_label} ${cc_package}
@@ -360,11 +361,12 @@ function install_chaincode() {
 function approve_chaincode() {
   local cc_name=$1
   local cc_id=$2
+  local cc_endorsement_policy=$3
 
   # Approve chaincode for org1
-  approve_chaincode_for org1 peer1 ${cc_name} ${cc_id}
+  approve_chaincode_for org1 peer1 ${cc_name} ${cc_id} ${cc_endorsement_policy}
   # Approve chaincode for org2
-  approve_chaincode_for org2 peer1 ${cc_name} ${cc_id}
+  approve_chaincode_for org2 peer1 ${cc_name} ${cc_id} ${cc_endorsement_policy}
 }
 
 function approve_chaincode_for() {
@@ -372,21 +374,29 @@ function approve_chaincode_for() {
   local peer=$2
   local cc_name=$3
   local cc_id=$4
+  local cc_endorsement_policy=$5
   push_fn "Approving chaincode ${cc_name} with ID ${cc_id} for ${org}"
 
   export_peer_context $org $peer
 
-  peer lifecycle \
-    chaincode approveformyorg \
-    --channelID     ${CHANNEL_NAME} \
-    --name          ${cc_name} \
-    --version       1 \
-    --package-id    ${cc_id} \
-    --sequence      1 \
-    --orderer       org0-orderer1.${DOMAIN}:${NGINX_HTTPS_PORT} \
-    --connTimeout   ${ORDERER_TIMEOUT} \
-    --tls --cafile  ${TEMP_DIR}/channel-msp/ordererOrganizations/org0/orderers/org0-orderer1/tls/signcerts/tls-cert.pem \
-    ${APPROVE_EXTRA_ARGS}
+  local approve_args=(
+    chaincode approveformyorg
+    --channelID     ${CHANNEL_NAME}
+    --name          ${cc_name}
+    --version       1
+    --package-id    ${cc_id}
+    --sequence      1
+    --orderer       org0-orderer1.${DOMAIN}:${NGINX_HTTPS_PORT}
+    --connTimeout   ${ORDERER_TIMEOUT}
+    --tls --cafile  ${TEMP_DIR}/channel-msp/ordererOrganizations/org0/orderers/org0-orderer1/tls/signcerts/tls-cert.pem
+  )
+
+  # Thêm chính sách endorsement nếu có
+  if [ -n "${cc_endorsement_policy}" ]; then
+    approve_args+=(--signature-policy "${cc_endorsement_policy}")
+  fi
+
+  peer lifecycle "${approve_args[@]}" ${APPROVE_EXTRA_ARGS}
 
   pop_fn
 }
@@ -394,29 +404,37 @@ function approve_chaincode_for() {
 # commit the named chaincode for an org
 function commit_chaincode() {
   local cc_name=$1
+  local cc_endorsement_policy=$2
 
-  # Commit chaincode from org1 (assuming both orgs have approved)
-  commit_chaincode_for org1 peer1 ${cc_name}
+  commit_chaincode_for org1 peer1 ${cc_name} "${cc_endorsement_policy}"
 }
 
 function commit_chaincode_for() {
   local org=$1
   local peer=$2
   local cc_name=$3
+  local cc_endorsement_policy=$4
   push_fn "Committing chaincode ${cc_name} from ${org}"
 
   export_peer_context $org $peer
 
-  peer lifecycle \
-    chaincode commit \
-    --channelID     ${CHANNEL_NAME} \
-    --name          ${cc_name} \
-    --version       1 \
-    --sequence      1 \
-    --orderer       org0-orderer1.${DOMAIN}:${NGINX_HTTPS_PORT} \
-    --connTimeout   ${ORDERER_TIMEOUT} \
-    --tls --cafile  ${TEMP_DIR}/channel-msp/ordererOrganizations/org0/orderers/org0-orderer1/tls/signcerts/tls-cert.pem \
-    ${COMMIT_EXTRA_ARGS}
+  local commit_args=(
+    chaincode commit
+    --channelID     ${CHANNEL_NAME}
+    --name          ${cc_name}
+    --version       1
+    --sequence      1
+    --orderer       org0-orderer1.${DOMAIN}:${NGINX_HTTPS_PORT}
+    --connTimeout   ${ORDERER_TIMEOUT}
+    --tls --cafile  ${TEMP_DIR}/channel-msp/ordererOrganizations/org0/orderers/org0-orderer1/tls/signcerts/tls-cert.pem
+  )
+
+  # Thêm chính sách endorsement nếu có
+  if [ -n "${cc_endorsement_policy}" ]; then
+    commit_args+=(--signature-policy "${cc_endorsement_policy}")
+  fi
+
+  peer lifecycle "${commit_args[@]}" ${COMMIT_EXTRA_ARGS}
 
   pop_fn
 }

@@ -1,0 +1,136 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fabric-rest-sample-config-org2
+data:
+  HLF_CONNECTION_PROFILE_ORG2: |
+    {
+        "name": "${ORG2_NS}-org2",
+        "version": "1.0.0",
+        "client": {
+            "organization": "Org2",
+            "connection": {
+                "timeout": {
+                    "peer": {
+                        "endorser": "500"
+                    }
+                }
+            }
+        },
+        "organizations": {
+            "Org2": {
+                "mspid": "Org2MSP",
+                "peers": [
+                    "org2-peers"
+                ],
+                "certificateAuthorities": [
+                    "org2-ca"
+                ]
+            }
+        },
+        "peers": {
+            "org2-peers": {
+                "url": "grpcs://org2-peer1.${ORG2_NS}.svc.cluster.local:7051",
+                "tlsCACerts": {
+                    "pem": "${PEERPEM_ORG2}"
+                },
+                "grpcOptions": {
+                    "grpc-wait-for-ready-timeout": 100000,
+                    "ssl-target-name-override": "org2-peer1.${ORG2_NS}.svc.cluster.local",
+                    "hostnameOverride": "org2-peer1.${ORG2_NS}.svc.cluster.local"
+                }
+            }
+        },
+        "certificateAuthorities": {
+            "org2-ca": {
+                "url": "https://org2-ca.${ORG2_NS}.svc.cluster.local:443",
+                "caName": "org2-ca",
+                "tlsCACerts": {
+                    "pem": ["${CAPEM_ORG2}"]
+                },
+                "httpOptions": {
+                    "verify": false
+                }
+            }
+        }
+    }
+  HLF_CERTIFICATE_ORG2: |
+    ${CERTIFICATE_ORG2}
+  HLF_PRIVATE_KEY_ORG2: |
+    ${PRIVATE_KEY_ORG2}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fabric-rest-sample-org2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fabric-rest-sample-org2
+  template:
+    metadata:
+      labels:
+        app: fabric-rest-sample-org2
+    spec:
+      containers:
+        - name: main
+          image: ghcr.io/hyperledger/fabric-rest-sample
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LOG_LEVEL
+              value: debug
+            - name: HFC_LOGGING
+              value: '{ "debug": "console" }'
+            - name: PORT
+              value: "3000"
+            - name: RETRY_DELAY
+              value: "3000"
+            - name: MAX_RETRY_COUNT
+              value: "5"
+            - name: HLF_COMMIT_TIMEOUT
+              value: "3000"
+            - name: HLF_ENDORSE_TIMEOUT
+              value: "30"
+            - name: REDIS_HOST
+              value: "localhost"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: ORG2_APIKEY
+              value: "BC42E734-062D-4AEE-A591-5973CB763430"
+            - name: AS_LOCAL_HOST
+              value: "false"
+            - name: HLF_CHAINCODE_NAME
+              value: "asset-transfer-basic"
+          envFrom:
+            - configMapRef:
+                name: fabric-rest-sample-config-org2
+          ports:
+            - containerPort: 3000
+        - name: redis
+          image: redis:6.2.5
+          ports:
+            - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fabric-rest-sample-org2
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      nodePort: 30002  
+      protocol: TCP
+  selector:
+    app: fabric-rest-sample-org2
